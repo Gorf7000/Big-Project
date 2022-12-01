@@ -7,7 +7,8 @@ library(XML)
 library(xml2)
 
 
-#setwd()
+
+#setwd("foo")
 
 baseurl <- "https://chroniclingamerica.loc.gov/search/pages/results/"
 
@@ -21,15 +22,17 @@ search_hits <- data.frame(search_hit_term = character(),
 s_hits_by_year = function(searchterms){
   
   rowsperpg <- 1 ####setting to one so as not to make the server angry
-  startyr <- 1777
-  endyr <- 1962
-  skipyear <- 31
+  #startyr <- 1777
+  #endyr <- 1963
+  #skipyear <- 31
   search_pause <- 6
   
   #searchyr between 1777-1963
+  search_range <- c(1777, 1808, 1839, 1870, 1901, 1932, 1937, 1947, 1957, 1963)
+  
   
   ##multi-year loop
-  for(searchyr in seq(from=startyr, to=endyr, by=skipyear)){
+  for(searchyr in (search_range)){
 
     #reset these every loop
     page <- 1
@@ -42,8 +45,8 @@ s_hits_by_year = function(searchterms){
       query <- paste0(baseurl,
                       "?",
                       "dateFilterType=yearRange&date1=",searchyr,"&date2=",searchyr+5,
-                   ###"&proxtext=",lex_term,"+",lex_term,"&proxdistance=100",
-                      "&andtext=",lex_term,
+                      "&proxtext=",lex_term,"+",lex_term,"&proxdistance=1000",
+                  ####"&andtext=",lex_term,
                       "&page=",1, ####setting to one page so as not to make the server angry
                       "&rows=",rowsperpg,
                       "&language=eng",
@@ -57,20 +60,18 @@ s_hits_by_year = function(searchterms){
       print(c(lex_term, searchyr, hits))
       search_hit_row <- c(lex_term, searchyr, hits)
       # print (t(search_hit_row))
-      write.table (t(search_hit_row),file="hits simple single 1777 to 1782", append=TRUE, col.names = FALSE, row.names = FALSE)
+      write.table (t(search_hit_row),file="hits double hit single word lexicon.csv", append=TRUE, col.names = FALSE, row.names = FALSE)
       
       Sys.sleep(search_pause)      
           } #end multi-year loop
-
-
-   
 }
 
-search_lex <- read.csv("simple single word lexicon.csv")
+search_lex <- read.csv("double hit single word lexicon.csv")
 names(search_lex) <- c("lex_word")
 
 
 for(lex_term in search_lex$lex_word) {
+  
   # print(c("The Current Term is ",lex_term))
   s_hits_by_year(lex_term)
 
@@ -81,3 +82,4 @@ for(lex_term in search_lex$lex_word) {
 
 
 print("And so say we all...")
+
