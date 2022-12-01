@@ -7,8 +7,7 @@ library(XML)
 library(xml2)
 
 
-
-setwd("C:\\Users\\grfai\\Documents\\Dissertation Data Scrape\\First Attempts at Utility")
+#setwd()
 
 baseurl <- "https://chroniclingamerica.loc.gov/search/pages/results/"
 
