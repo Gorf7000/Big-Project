@@ -1,0 +1,81 @@
+### LOC Chronicallying America API
+
+library(httr)
+library(dplyr)
+library(tidyr)
+library(XML)
+library(xml2)
+
+
+
+setwd("FOO")
+
+baseurl <- "https://chroniclingamerica.loc.gov/search/pages/results/"
+
+###Create df for search_hits
+search_hits <- data.frame(search_hit_term = character(),
+                          search_hit_year = double(),
+                          search_hit_count = integer())
+
+
+
+s_hits_by_year = function(searchterms,lex_start){
+  
+  rowsperpg <- 1 ####setting to one so as not to make the server angry
+  startyr <- lex_start
+  endyr <- 1963
+  #skipyear <- 31
+  search_pause <- 6
+  
+  #searchyr between 1777-1963
+  #search_range <- c(1777, 1808, 1839, 1870, 1901, 1932, 1937, 1947, 1957, 1963)
+  
+  
+  ##multi-year loop
+  for(searchyr in seq(from=startyr, to=endyr, by=1)){
+    
+    #reset these every loop
+    page <- 1
+    maxPages <- 1
+    hits <-0
+    
+    ### pages loop
+    
+    
+    query <- paste0(baseurl,
+                    "?",
+                    "dateFilterType=yearRange&date1=",searchyr,"&date2=",searchyr,
+                    ####"&proxtext=",lex_term,"+",lex_term,"&proxdistance=100000",
+                    "&andtext=",lex_term,
+                    "&page=",1, ####setting to one page so as not to make the server angry
+                    "&rows=",rowsperpg,
+                    "&language=eng",
+                    "&searchType=advanced",
+                    "&format=atom")
+    Sys.sleep(search_pause)   
+    xmlresp <- read_xml(GET(query))
+    #View(content(htmlresp, "text")) #for debugging
+    
+    
+    hits<-xml_text(xml_find_all(xmlresp,xpath="//opensearch:totalResults")) #total hits from query
+    print(c(lex_term, searchyr, hits))
+    search_hit_row <- c(lex_term, searchyr, hits)
+    # print (t(search_hit_row))
+    write.table (t(search_hit_row),file="Final Counts Run Single Word with Search Year - Hits.csv", append=TRUE, col.names = FALSE, row.names = FALSE, quote=FALSE, sep=",")
+    
+    
+  } #end multi-year loop
+}
+
+search_lex <- read.csv("Final Counts Run Single Word with Search Year 2.csv")
+names(search_lex) <- c("lex_word,lex_start")
+
+
+for(lex_term in search_lex$lex_word) {
+  
+  # print(c("The Current Term is ",lex_term,search_lex[(which(search_lex == lex_term)),2]))
+  s_hits_by_year(lex_term,search_lex[(which(search_lex == lex_term)),2])
+}
+
+print("And so say we all...")
+
